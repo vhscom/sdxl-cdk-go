@@ -5,6 +5,7 @@ import (
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
 
+	"github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
 	"github.com/aws/aws-cdk-go/awscdklambdagoalpha/v2"
 
 	"github.com/aws/constructs-go/constructs/v10"
@@ -41,7 +42,9 @@ func NewSdxlCdkGoStack(scope constructs.Construct, id string, props *SdxlCdkGoSt
 			"BUCKET_NAME": jsii.String(imageBucketName),
 		},
 		Timeout: awscdk.Duration_Seconds(jsii.Number(120)),
-	}).AddFunctionUrl(&awslambda.FunctionUrlOptions{
+	})
+
+	fnUrl := function.AddFunctionUrl(&awslambda.FunctionUrlOptions{
 		AuthType: awslambda.FunctionUrlAuthType_NONE,
 		Cors: &awslambda.FunctionUrlCorsOptions{
 			AllowedOrigins: jsii.Strings(allowedOrigins),
@@ -49,8 +52,14 @@ func NewSdxlCdkGoStack(scope constructs.Construct, id string, props *SdxlCdkGoSt
 		},
 	})
 
+	function.AddToRolePolicy(awsiam.NewPolicyStatement(&awsiam.PolicyStatementProps{
+		Actions:   jsii.Strings("bedrock:InvokeModel*"),
+		Effect:    awsiam.Effect_ALLOW,
+		Resources: jsii.Strings("*"),
+	}))
+
 	awscdk.NewCfnOutput(stack, jsii.String("SdxlCdkGoLambdaFunctionUrl"), &awscdk.CfnOutputProps{
-		Value: function.Url(),
+		Value: fnUrl.Url(),
 	})
 
 	return stack
