@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-lambda-go/events"
@@ -80,6 +81,18 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 
 	// Get the request body
 	prompt := req.Body
+
+	// Check if request has query string parameters
+	if req.QueryStringParameters == nil {
+		fmt.Println("no query string parameters, using default values")
+		req.QueryStringParameters = map[string]string{
+			"cfg_scale": "7.0",
+			"seed":      "0",
+			"steps":     "20",
+			"width":     "1024",
+			"height":    "1024",
+		}
+	}
 
 	// Parse the query string
 	cfgScaleF, _ := strconv.ParseFloat(req.QueryStringParameters["cfg_scale"], 64)
@@ -158,6 +171,12 @@ func (p *BedrockRequestPayload) Validate() error {
 		// do nothing
 	default:
 		return fmt.Errorf("width and height must be one of 1024x1024, 1152x896, 1216x832, 1344x768, 1536x640, 640x1536, 768x1344, 832x1216, 896x1152")
+	}
+
+	len := len(strings.Fields(p.TextPrompts[0].Text))
+	max := 75
+	if len > max {
+		return fmt.Errorf("body must be less than %d tokens", max)
 	}
 
 	return nil
