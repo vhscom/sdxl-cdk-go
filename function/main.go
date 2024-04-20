@@ -41,41 +41,37 @@ func init() {
 }
 
 func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.LambdaFunctionURLResponse, error) {
-
 	// Cancel the context after timeout
-	ctx, cancel := context.WithTimeout(context.Background(), timeoutSeconds*time.Second)
-	defer func() {
-		fmt.Println("Canceling context")
-		cancel()
-	}()
-	go func() {
-		<-ctx.Done()
-		fmt.Println("Context cancelled")
-	}()
+	timeout, err := strconv.Atoi(os.Getenv("TIMEOUT_SECONDS"))
+	if err != nil {
+		timeout = timeoutSeconds
+	}
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Second)
+	defer cancel()
 
 	// Print the request data
-	fmt.Printf("Processing request data for request %s.\n", req.RequestContext.RequestID)
-	fmt.Printf("Body size = %d.\n", len(req.Body))
+	log.Printf("Processing request data for request %s.\n", req.RequestContext.RequestID)
+	log.Printf("Body size = %d.\n", len(req.Body))
 
-	fmt.Println("Headers:")
+	log.Println("Headers:")
 	for key, value := range req.Headers {
-		fmt.Printf(" ++ %s: %s\n", key, value)
+		log.Printf(" ++ %s: %s\n", key, value)
 	}
 
-	fmt.Println("Query string parameters:")
+	log.Println("Query string parameters:")
 	for key, value := range req.QueryStringParameters {
-		fmt.Printf(" && %s: %s\n", key, value)
+		log.Printf(" && %s: %s\n", key, value)
 	}
 
 	// Check query string for cfg_scale with no value defined
 	if _, ok := req.QueryStringParameters["cfg_scale"]; !ok {
-		fmt.Println("cfg_scale not defined, using default value")
+		log.Println("cfg_scale not defined, using default value")
 		req.QueryStringParameters["cfg_scale"] = "7.0"
 	}
 
 	// If cfg_scale is not a number, use default value
 	if _, err := strconv.ParseFloat(req.QueryStringParameters["cfg_scale"], 64); err != nil {
-		fmt.Println("cfg_scale is not a number, using default value")
+		log.Println("cfg_scale is not a number, using default value")
 		req.QueryStringParameters["cfg_scale"] = "7.0"
 	}
 
@@ -84,7 +80,7 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 
 	// Check if request has query string parameters
 	if req.QueryStringParameters == nil {
-		fmt.Println("no query string parameters, using default values")
+		log.Println("no query string parameters, using default values")
 		req.QueryStringParameters = map[string]string{
 			"cfg_scale": "7.0",
 			"seed":      "0",
@@ -116,7 +112,7 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 
 	// Validate the payload and return error if invalid
 	if err := payload.Validate(); err != nil {
-		fmt.Println("failed to validate payload\n", err)
+		log.Println("failed to validate payload\n", err)
 
 		return events.LambdaFunctionURLResponse{
 			Body:       err.Error(),
@@ -127,11 +123,14 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 	// Marshall the payload to JSON
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
-		log.Fatal("failed to marshall json\n", err)
+		return events.LambdaFunctionURLResponse{
+			Body:       fmt.Sprintf("failed to marshal JSON: %v", err),
+			StatusCode: 500,
+		}, nil
 	}
 
 	// Invoke the model with the payload
-	result, err := bedrockSvc.InvokeModel(context.Background(), &bedrockruntime.InvokeModelInput{
+	result, err := bedrockSvc.InvokeModel(ctx, &bedrockruntime.InvokeModelInput{
 		ModelId:     aws.String(stableDiffusionXLModelID),
 		Body:        payloadBytes,
 		ContentType: aws.String("application/json"),
@@ -144,7 +143,10 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 	var resp BedrockResponseBody
 	err = json.Unmarshal(result.Body, &resp)
 	if err != nil {
-		log.Fatal("failed to unmarshal json\n", err)
+		return events.LambdaFunctionURLResponse{
+			Body:       fmt.Sprintf("failed to unmarshal JSON: %v", err),
+			StatusCode: 500,
+		}, nil
 	}
 
 	// Get and return the image from the response
