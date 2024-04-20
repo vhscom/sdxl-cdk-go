@@ -1,12 +1,21 @@
 # SDXL CDK Go
 
-A CDK project for generating images using [AWS Bedrock](https://aws.amazon.com/bedrock/) via SDXL. It is built using the [AWS Cloud Development Kit](https://aws.amazon.com/cdk/), an Infrastructure as Code (IaC) tool to compose existing, well-architected AWS constructs to create an [AWS Lambda](https://aws.amazon.com/lambda/) with a [Function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) and permissions to call the Bedrock API. Implemented in [Go](https://go.dev/). :-)
+> CDK Stack for Amazon Bedrock and Stability.ai Stable Diffusion XL 1.0 Image Generation
 
-The `cdk.json` file tells the CDK toolkit how to execute your app.
+A CDK pattern for generating images using [AWS Bedrock](https://aws.amazon.com/bedrock/) via SDXL. It is built using the [AWS Cloud Development Kit](https://aws.amazon.com/cdk/), an Infrastructure as Code (IaC) tool to compose existing AWS constructs to create an [AWS Lambda](https://aws.amazon.com/lambda/) with a [Function URL](https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html) and permissions to call the Bedrock API. Implemented in [Go](https://go.dev/). :-)
+
+## Features
+
+- Generates photorealistic images with high quality
+- Responses can be received in 7-10 seconds
+- Configurable inputs, limited to a single prompt
+- Quick, repeatable set-up and teardown
+- Automatic bundling with 3-6 second hot swaps
+- Rigorous error handling with forgiving responses
 
 ## Why Golang
 
-This project leverages [Amazon Lambda Golang Library](https://constructs.dev/packages/@aws-cdk/aws-lambda-go-alpha/v/2.137.0-alpha.0), an experimental library under active development that allows us to define our Lambda function using a handler code entrypoint as opposed to defining the handler using an asset, which introduces an intermediate build step into the development workflow.
+This project leverages [Amazon Lambda Golang Library](https://constructs.dev/packages/@aws-cdk/aws-lambda-go-alpha/v/2.137.0-alpha.0), an experimental library under active development that allows us to define our Lambda function using a handler code entrypoint as opposed to defining the handler using an asset for automatic bundling and faster hot-swapping behavior.
 
 ## Requirements
 
@@ -50,6 +59,7 @@ Deployment and testing
 - `bunx cdk diff` compare deployed stack with current state
 - `bunx cdk synth` emits the synthesized CloudFormation template
 - `go test` run unit tests
+- `bunx cdk destroy` destroy the stack
 
 Development
 
