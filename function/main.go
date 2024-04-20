@@ -63,6 +63,18 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 		log.Printf(" && %s: %s\n", key, value)
 	}
 
+	// Check if request has query string parameters
+	if req.QueryStringParameters == nil {
+		log.Println("no query string parameters, using default values")
+		req.QueryStringParameters = map[string]string{
+			"cfg_scale": "7.0",
+			"seed":      "0",
+			"steps":     "20",
+			"width":     "1024",
+			"height":    "1024",
+		}
+	}
+
 	// Check query string for cfg_scale with no value defined
 	if _, ok := req.QueryStringParameters["cfg_scale"]; !ok {
 		log.Println("cfg_scale not defined, using default value")
@@ -77,18 +89,6 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 
 	// Get the request body
 	prompt := req.Body
-
-	// Check if request has query string parameters
-	if req.QueryStringParameters == nil {
-		log.Println("no query string parameters, using default values")
-		req.QueryStringParameters = map[string]string{
-			"cfg_scale": "7.0",
-			"seed":      "0",
-			"steps":     "20",
-			"width":     "1024",
-			"height":    "1024",
-		}
-	}
 
 	// Parse the query string
 	cfgScaleF, _ := strconv.ParseFloat(req.QueryStringParameters["cfg_scale"], 64)
@@ -107,8 +107,8 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 		Height:      height,
 	}
 
-	// Initialize the payload with default values
-	payload.Init()
+	// Set the payload defaults
+	payload.SetDefaults()
 
 	// Validate the payload and return error if invalid
 	if err := payload.Validate(); err != nil {
@@ -184,8 +184,8 @@ func (p *BedrockRequestPayload) Validate() error {
 	return nil
 }
 
-// Initialize payload
-func (p *BedrockRequestPayload) Init() BedrockRequestPayload {
+// Set the payload defaults
+func (p *BedrockRequestPayload) SetDefaults() BedrockRequestPayload {
 	// set values if not already set
 	if p.TextPrompts == nil {
 		p.TextPrompts = make([]TextPrompt, 0)
