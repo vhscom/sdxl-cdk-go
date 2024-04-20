@@ -21,17 +21,19 @@ Once deployed, curl the function URL to generate an image:
 ```shell
 curl -X POST \
     -H "Content-Type: application/json" \
-    -d '{"prompt": "a photograph of an astronaut riding a horse"}' \
+    -d 'a photograph of an astronaut riding a horse, 8k' \
     'https://tfxu2xorlbqekqv3l1kytkdb3e0nkjgk.lambda-url.us-east-1.on.aws/?cfg_scale=8.0&steps=20&seed=0'
 ```
 
-The endpoint URL will become available upon deployment and will appear in the CDK stack outputs. The following query string parameters are supported:
+The endpoint URL will become available upon deployment and will appear in the CDK stack outputs. Pass in your prompt as the body of the request in plain text. The following query string parameters are supported:
 
 - `cfg_scale`: The scale to use when generating the image
 - `seed`: The seed to use when generating the image
 - `steps`: The number of steps to use when generating the image
+- `width`: The width of the image to generate
+- `height`: The height of the image to generate
 
-Pass in your prompt as the body of the request. This can be plaintext.
+All parameters are optional. If not specified, [the Bedrock defaults](https://docs.aws.amazon.com/bedrock/latest/userguide/model-parameters-diffusion-1-0-text-image.html) will be used.
 
 ## Useful commands
 
@@ -44,9 +46,9 @@ Accounts and regions
 
 Deployment and testing
 
-- `cdk deploy` deploy this stack to your default AWS account/region
-- `cdk diff` compare deployed stack with current state
-- `cdk synth` emits the synthesized CloudFormation template
+- `bunx cdk deploy` deploy this stack to your default AWS account/region
+- `bunx cdk diff` compare deployed stack with current state
+- `bunx cdk synth` emits the synthesized CloudFormation template
 - `go test` run unit tests
 
 Development
