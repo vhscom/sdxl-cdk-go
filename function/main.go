@@ -69,6 +69,18 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 		fmt.Printf(" && %s: %s\n", key, value)
 	}
 
+	// Check query string for cfg_scale with no value defined
+	if _, ok := req.QueryStringParameters["cfg_scale"]; !ok {
+		fmt.Println("cfg_scale not defined, using default value")
+		req.QueryStringParameters["cfg_scale"] = "7.0"
+	}
+
+	// If cfg_scale is not a number, use default value
+	if _, err := strconv.ParseFloat(req.QueryStringParameters["cfg_scale"], 64); err != nil {
+		fmt.Println("cfg_scale is not a number, using default value")
+		req.QueryStringParameters["cfg_scale"] = "7.0"
+	}
+
 	// Get the request body
 	prompt := req.Body
 
@@ -79,7 +91,7 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 	width, _ := strconv.Atoi(req.QueryStringParameters["width"])
 	height, _ := strconv.Atoi(req.QueryStringParameters["height"])
 
-	// Create the payload
+	// Create the payload for the model
 	payload := BedrockRequestPayload{
 		TextPrompts: []TextPrompt{{Text: prompt}},
 		CfgScale:    cfgScaleF,
@@ -89,10 +101,10 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 		Height:      height,
 	}
 
-	// Initialize zero values
+	// Initialize the payload with default values
 	payload.Init()
 
-	// Validate the payload
+	// Validate the payload and return error if invalid
 	if err := payload.Validate(); err != nil {
 		fmt.Println("failed to validate payload\n", err)
 
@@ -102,34 +114,30 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 		}, nil
 	}
 
-	// Marshall the payload
+	// Marshall the payload to JSON
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
 		log.Fatal("failed to marshall json\n", err)
 	}
 
-	// Print the payload for debugging
-	fmt.Printf("Inference payload = %s.\n", string(payloadBytes))
-
-	// Invoke the model
+	// Invoke the model with the payload
 	result, err := bedrockSvc.InvokeModel(context.Background(), &bedrockruntime.InvokeModelInput{
 		ModelId:     aws.String(stableDiffusionXLModelID),
 		Body:        payloadBytes,
 		ContentType: aws.String("application/json"),
 	})
-
 	if err != nil {
 		log.Fatal("failed to invoke model\n", err)
 	}
 
-	// Unmarshall the response
+	// Unmarshall the response from the model
 	var resp BedrockResponseBody
 	err = json.Unmarshal(result.Body, &resp)
 	if err != nil {
 		log.Fatal("failed to unmarshal json\n", err)
 	}
 
-	// Get and return the image
+	// Get and return the image from the response
 	image := resp.Artifacts[0].Base64
 	return events.LambdaFunctionURLResponse{Body: image, StatusCode: 200}, nil
 }
@@ -158,20 +166,14 @@ func (p *BedrockRequestPayload) Validate() error {
 	return nil
 }
 
-// Initialize payload as needed
+// Initialize payload
 func (p *BedrockRequestPayload) Init() BedrockRequestPayload {
 	// set values if not already set
 	if p.TextPrompts == nil {
 		p.TextPrompts = make([]TextPrompt, 0)
 	}
-	if p.CfgScale == 0 {
-		p.CfgScale = 7.0
-	}
 	if p.Steps == 0 {
 		p.Steps = 20
-	}
-	if p.Seed == 0 {
-		p.Seed = 0
 	}
 	if p.Width == 0 {
 		p.Width = 1024
