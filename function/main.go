@@ -56,9 +56,6 @@ func handler(ctx context.Context, req events.LambdaFunctionURLRequest) (events.L
 	fmt.Printf("Processing request data for request %s.\n", req.RequestContext.RequestID)
 	fmt.Printf("Body size = %d.\n", len(req.Body))
 
-	var bucketname = os.Getenv("BUCKET_NAME")
-	fmt.Printf("Bucket name = %s.\n", bucketname)
-
 	fmt.Println("Headers:")
 	for key, value := range req.Headers {
 		fmt.Printf(" ++ %s: %s\n", key, value)

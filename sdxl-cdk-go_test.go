@@ -21,25 +21,11 @@ func TestSdxlCdkGoStack(t *testing.T) {
 	template.HasResourceProperties(jsii.String("AWS::Lambda::Url"), map[string]interface{}{
 		"AuthType": "NONE",
 		"Cors": map[string]interface{}{
-			"AllowHeaders": []string{allowedHeaders},
 			"AllowOrigins": []string{allowedOrigins},
 		},
 	})
 
-	template.HasResourceProperties(jsii.String("AWS::S3::Bucket"), map[string]interface{}{
-		"AutoDeleteObjects": nil,
-		"BucketName":        imageBucketName,
-	})
-
 	template.HasResourceProperties(jsii.String("AWS::Lambda::Function"), map[string]interface{}{
-		"Environment": map[string]interface{}{
-			"Variables": map[string]interface{}{
-				"BUCKET_NAME": imageBucketName,
-			},
-		},
-	})
-
-	template.HasResourceProperties(jsii.String("AWS::Lambda::Function"), map[string]interface{}{
-		"Timeout": 120,
+		"Timeout": 30,
 	})
 }

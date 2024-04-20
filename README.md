@@ -20,7 +20,7 @@ Once deployed, curl the function URL to generate an image:
 
 ```shell
 curl -X POST \
-    -H "Content-Type: application/json" \
+    -H "Content-Type: text/plain" \
     -d 'a photograph of an astronaut riding a horse, 8k' \
     'https://tfxu2xorlbqekqv3l1kytkdb3e0nkjgk.lambda-url.us-east-1.on.aws/?cfg_scale=8.0&steps=20&seed=0'
 ```

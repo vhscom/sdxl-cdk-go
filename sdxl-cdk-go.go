@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/aws/aws-cdk-go/awscdk/v2"
 	"github.com/aws/aws-cdk-go/awscdk/v2/awslambda"
-	"github.com/aws/aws-cdk-go/awscdk/v2/awss3"
 
 	"github.com/aws/aws-cdk-go/awscdk/v2/awsiam"
 	"github.com/aws/aws-cdk-go/awscdklambdagoalpha/v2"
@@ -13,10 +12,9 @@ import (
 )
 
 const (
-	imageBucketName = "sdxl-cdk-go-generated-images"
 	functionDir     = "function"
 	allowedOrigins  = "*"
-	allowedHeaders  = "Accept,Authorization,Content-Type,X-Amz-Date,X-Amz-Security-Token,X-Api-Key,X-Amz-Signature,X-Requested-With"
+	functionTimeout = 30
 )
 
 type SdxlCdkGoStackProps struct {
@@ -30,25 +28,16 @@ func NewSdxlCdkGoStack(scope constructs.Construct, id string, props *SdxlCdkGoSt
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	awss3.NewBucket(stack, jsii.String("SdxlCdkGoBucket"), &awss3.BucketProps{
-		BucketName:    jsii.String(imageBucketName),
-		RemovalPolicy: awscdk.RemovalPolicy_DESTROY,
-	})
-
 	function := awscdklambdagoalpha.NewGoFunction(stack, jsii.String("SdxlCdkGoLambda"), &awscdklambdagoalpha.GoFunctionProps{
 		Runtime: awslambda.Runtime_PROVIDED_AL2023(),
 		Entry:   jsii.String(functionDir),
-		Environment: &map[string]*string{
-			"BUCKET_NAME": jsii.String(imageBucketName),
-		},
-		Timeout: awscdk.Duration_Seconds(jsii.Number(120)),
+		Timeout: awscdk.Duration_Seconds(jsii.Number(functionTimeout)),
 	})
 
 	fnUrl := function.AddFunctionUrl(&awslambda.FunctionUrlOptions{
 		AuthType: awslambda.FunctionUrlAuthType_NONE,
 		Cors: &awslambda.FunctionUrlCorsOptions{
 			AllowedOrigins: jsii.Strings(allowedOrigins),
-			AllowedHeaders: jsii.Strings(allowedHeaders),
 		},
 	})
 
