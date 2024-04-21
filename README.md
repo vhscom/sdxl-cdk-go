@@ -7,11 +7,16 @@ A CDK pattern for generating images using [AWS Bedrock](https://aws.amazon.com/b
 ## Features
 
 - Generates photorealistic images with high quality
+- Includes HTML application for generating images
 - Responses can be received in 7-10 seconds
 - Configurable inputs, limited to a single prompt
 - Quick, repeatable set-up and teardown
 - Automatic bundling with 3-6 second hot swaps
 - Rigorous error handling with forgiving responses
+
+## Screenshot
+
+![Screenshot](screenshot.png)
 
 ## Why Golang
 

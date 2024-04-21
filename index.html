@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SDXL Image Generator</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjEwMjQiIHZpZXdCb3g9IjAgMCAxMDI0IDEwMjQiIHdpZHRoPSIxMDI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogIDx0aXRsZT5QaWNvIGljb248L3RpdGxlPgogIDxzdHlsZSB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgogICAgLmJpZy1zcGFya2xlIHsgZmlsbDogI0ZGOTUwMCB9CiAgICAuc21hbGwtc3BhcmtsZXMgeyBmaWxsOiAjRkZCRjAwIH0KICAgIEBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICAgICAgLmJpZy1zcGFya2xlIHsgZmlsbDogI0ZGQkYwMCB9CiAgICAgIC5zbWFsbC1zcGFya2xlcyB7IGZpbGw6ICNGRjk1MDAgfQogICAgfQogIDwvc3R5bGU+CiAgPHBhdGggY2xhc3M9ImJpZy1zcGFya2xlIiBkPSJtNzc3LjM4NyA2MDkuMThjLTUuNDI3IDIuMDM5LTkuNzE2IDYuMjI5LTExLjgwMyAxMS41MzFsLTgwLjI4NyAyMDMuOTQ4Yy02Ljc1NSAxNy4xNTktMzEuNjA0IDE3LjE2LTM4LjM1OSAwbC04MC4yODctMjAzLjk0OGMtMi4wODctNS4zMDItNi4zNzYtOS40OTItMTEuODAzLTExLjUzMWwtMjA4Ljc0Ni03OC40NDJjLTE3LjU2NC02LjU5OS0xNy41NjQtMzAuODc3IDAtMzcuNDc2bDIwOC43NDYtNzguNDQyYzUuNDI3LTIuMDM5IDkuNzE2LTYuMjI5IDExLjgwMy0xMS41MzFsODAuMjg3LTIwMy45NDhjNi43NTUtMTcuMTU5IDMxLjYwNC0xNy4xNTkgMzguMzU5IDBsODAuMjg3IDIwMy45NDhjMi4wODcgNS4zMDIgNi4zNzYgOS40OTIgMTEuODAzIDExLjUzMWwyMDguNzQ3IDc4LjQ0MmMxNy41NjYgNi41OTkgMTcuNTY2IDMwLjg3NyAwIDM3LjQ3N3oiLz4KICA8ZyBjbGFzcz0ic21hbGwtc3BhcmtsZXMiPgogICAgPHBhdGggZD0ibTE5Mi4xMjEgMzQyLjgyYy02Ljc1NiAxNy4xNi0zMS42MDQgMTcuMTYtMzguMzU5IDBsLTI4LjkxNS03My40NDljLTIuMDg3LTUuMzAyLTYuMzc2LTkuNDkyLTExLjgwMy0xMS41MzJsLTc1LjE3NzctMjguMjVjLTE3LjU2MzEtNi41OTktMTcuNTYzMS0zMC44NzcgMC0zNy40NzdsNzUuMTc3Ny0yOC4yNDljNS40MjctMi4wNCA5LjcxNi02LjIzIDExLjgwMy0xMS41MzJsMjguOTE1LTczLjQ0OThjNi43NTUtMTcuMTU5NCAzMS42MDMtMTcuMTU5MyAzOC4zNTkuMDAwMWwyOC45MTQgNzMuNDQ5N2MyLjA4NyA1LjMwMiA2LjM3NiA5LjQ5MiAxMS44MDMgMTEuNTMybDc1LjE3OCAyOC4yNDljMTcuNTYzIDYuNiAxNy41NjMgMzAuODc4IDAgMzcuNDc3bC03NS4xNzggMjguMjVjLTUuNDI3IDIuMDQtOS43MTYgNi4yMy0xMS44MDMgMTEuNTMyeiIvPgogICAgPHBhdGggZD0ibTM1Ni4xMzIgODYwLjEzOGMtNS40MjcgMi4wMzktOS43MTUgNi4yMjktMTEuODAzIDExLjUzMWwtMjguOTE0IDczLjQ1Yy02Ljc1NSAxNy4xNTktMzEuNjA0IDE3LjE1OS0zOC4zNTkgMGwtMjguOTE1LTczLjQ1Yy0yLjA4Ny01LjMwMi02LjM3Ni05LjQ5Mi0xMS44MDItMTEuNTMxbC03NS4xNzktMjguMjVjLTE3LjU2My02LjYtMTcuNTYzLTMwLjg3NyAwLTM3LjQ3N2w3NS4xNzktMjguMjVjNS40MjYtMi4wMzkgOS43MTUtNi4yMjkgMTEuODAyLTExLjUzMWwyOC45MTUtNzMuNDVjNi43NTUtMTcuMTYgMzEuNjA0LTE3LjE2IDM4LjM1OSAwbDI4LjkxNCA3My40NWMyLjA4OCA1LjMwMiA2LjM3NiA5LjQ5MiAxMS44MDMgMTEuNTMxbDc1LjE3OCAyOC4yNWMxNy41NjMgNi42IDE3LjU2MyAzMC44NzcgMCAzNy40Nzd6Ii8+CiAgPC9nPgo8L3N2Zz4="
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+    />
+
+    <script>
+      /**
+       * API endpoint URL
+       * @type {string}
+       * @example "https://y4jb5jrw6ddimtalbmw5yva4ya0idwzb.lambda-url.us-east-1.on.aws/"
+       */
+      const endpoint = "INPUT_ENDPOINT_HERE";
+
+      /**
+       * Fetches an image from the API and renders it to the canvas
+       * @param {string} inputText - The input text to generate image from
+       * @param {boolean} [areCaptionsEnabled=false] - Flag to display captions
+       * @returns {Promise<HTMLCanvasElement>} - Promise resolving to the canvas element
+       */
+      const fetchAndRenderImage = async (
+        inputText,
+        areCaptionsEnabled = false
+      ) => {
+        if (!inputText) {
+          throw new Error("No input text provided");
+        }
+
+        try {
+          const response = await fetch(
+            `${endpoint}?cfg_scale=8.0&steps=20&seed=0`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "text/plain",
+                Accept: "text/plain",
+              },
+              body: inputText,
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+
+          const data = await response.text();
+
+          const img = new Image();
+          img.src = `data:image/png;base64,${data}`;
+
+          await new Promise((resolve, reject) => {
+            img.onload = () => {
+              resolve();
+              cancelAnimationFrame(raf);
+              setAnimationProgressBar(100);
+            };
+            img.onerror = (err) => {
+              reject(err);
+              cancelAnimationFrame(raf);
+              setAnimationProgressBar(0);
+            };
+          });
+
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            throw new Error("Failed to get 2d context");
+          }
+          ctx.drawImage(img, 0, 0);
+
+          if (areCaptionsEnabled) {
+            ctx.font = "16px serif";
+            ctx.fillText(`Prompt: ${inputText}`, 10, 24);
+          }
+
+          return canvas;
+        } catch (error) {
+          console.error("Error fetching and rendering image:", error);
+          throw error;
+        }
+      };
+
+      /**
+       * Handle for the request animation frame
+       * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame
+       * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/cancelAnimationFrame
+       */
+      let raf;
+
+      /**
+       * Animate progress bar
+       * @returns {() => void}
+       */
+      const animateProgressBar = () => {
+        const progressBar = document.getElementById("progress");
+        let startTime;
+        const updateProgress = (timestamp) => {
+          const elapsedTime = timestamp - startTime;
+          const remainingTime = Math.max(10000 - elapsedTime, 0);
+          progressBar.value = 100 - (remainingTime / 10000) * 100;
+          if (progressBar.value < 100) {
+            raf = requestAnimationFrame(updateProgress);
+          }
+        };
+        return () => {
+          startTime = performance.now();
+          raf = requestAnimationFrame(updateProgress);
+        };
+      };
+
+      /**
+       * Set the progress bar value
+       * @param {number} [value=0] - The value to set the progress bar to
+       * @returns {() => void}
+       */
+      const setAnimationProgressBar = (value = 0) => {
+        const progressBar = document.getElementById("progress");
+        if (!progressBar) {
+          return;
+        }
+        progressBar.value = value;
+      };
+
+      /**
+       * Handle form submission
+       * @param {SubmitEvent} event - The form submission event
+       * @returns {Promise<void>}
+       */
+      const handleSubmit = async (event) => {
+        event.preventDefault();
+        const textarea = event.target.elements[0];
+        const button = event.target.elements[1];
+        if (
+          !(textarea instanceof HTMLTextAreaElement) ||
+          !(button instanceof HTMLButtonElement)
+        ) {
+          return;
+        }
+        const resultsContainer = document.getElementById("results");
+        if (!resultsContainer) {
+          return;
+        }
+
+        const inputText = textarea.value;
+        if (inputText) {
+          const areCaptionsEnabled =
+            document.querySelector('input[name="captions"]')?.checked ?? false;
+
+          button.setAttribute("aria-busy", "true");
+          button.setAttribute("aria-label", "Please wait...");
+          try {
+            animateProgressBar()();
+            const canvas = await fetchAndRenderImage(
+              inputText,
+              areCaptionsEnabled
+            );
+            button.removeAttribute("aria-busy");
+            button.removeAttribute("aria-label");
+            if (canvas) {
+              canvas.style.width = "100%";
+              resultsContainer.insertBefore(
+                canvas,
+                resultsContainer.firstChild
+              );
+            }
+          } catch (error) {
+            console.error("Error rendering image:", error);
+          }
+        }
+      };
+
+      /**
+       * Handle DOMContentLoaded
+       * @see https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
+       * @returns {void}
+       */
+      document.addEventListener("DOMContentLoaded", () => {
+        const form = document.querySelector("form");
+        if (!endpoint || endpoint === "INPUT_ENDPOINT_HERE") {
+          form.elements.namedItem("submit").disabled = true;
+          form.elements.namedItem("prompt").value =
+            "please set your sdxl endpoint in the page source before using the form";
+        } else {
+          form.addEventListener("submit", handleSubmit);
+        }
+      });
+    </script>
+    <style>
+      canvas:not(:last-child) {
+        margin-bottom: 1rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>SDXL Image Generator</h1>
+    </header>
+    <main>
+      <noscript>
+        <p>This page requires JavaScript.</p>
+      </noscript>
+      <p>Enter your prompt here and click "Generate image".</p>
+      <form>
+        <textarea name="prompt">
+a photograph of an astronaut riding a horse, 8k</textarea
+        >
+        <progress id="progress" value="0" max="100"></progress>
+        <button type="submit" aria-busy="false" name="submit">
+          Generate image
+        </button>
+        <fieldset>
+          <legend>Settings:</legend>
+          <label>
+            <input type="checkbox" name="captions" />
+            Display prompt as image caption (experimental)
+          </label>
+        </fieldset>
+      </form>
+      <article id="results"></article>
+    </main>
+    <footer>
+      <p>
+        Made with ❤️ by <a href="https://vhs.codeberg.page/">VHS</a> using
+        <a href="https://picocss.com/">Pico CSS</a>.
+      </p>
+      <p>
+        Get the source code on
+        <a href="https://github.com/vhscom/sdxl-cdk-go/">GitHub</a>.
+      </p>
+    </footer>
+  </body>
+</html>
