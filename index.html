@@ -50,6 +50,15 @@
           );
 
           if (!response.ok) {
+            const submit = document.forms[0]?.elements?.submit;
+            const dialog = document.querySelector("dialog");
+            dialog?.showModal();
+            cancelAnimationFrame(raf);
+            setAnimationProgressBar(0);
+            if (submit) {
+              submit.removeAttribute("aria-busy");
+              submit.removeAttribute("aria-label");
+            }
             throw new Error("Network response was not ok");
           }
 
@@ -87,7 +96,6 @@
 
           return canvas;
         } catch (error) {
-          console.error("Error fetching and rendering image:", error);
           throw error;
         }
       };
@@ -195,6 +203,15 @@
         } else {
           form.addEventListener("submit", handleSubmit);
         }
+
+        const dialog = document.querySelector("dialog");
+        if (dialog) {
+          const closeInput = dialog.querySelector('[aria-label="Close"]');
+          closeInput &&
+            closeInput.addEventListener("click", () => {
+              dialog.close();
+            });
+        }
       });
     </script>
     <style>
@@ -231,6 +248,24 @@ a photograph of an astronaut riding a horse, 8k</textarea
       </form>
       <article id="results"></article>
     </main>
+    <dialog>
+      <article>
+        <header>
+          <button aria-label="Close" rel="prev"></button>
+          <p>
+            <strong>🦙 Uh oh! Something went wrong.</strong>
+          </p>
+        </header>
+        <p>
+          Bedrock has failed to generate the image. Please try again later or:
+        </p>
+        <ul>
+          <li>Try again with a different prompt</li>
+          <li>Keep your prompt less than 75 tokens (whitespace delimited)</li>
+          <li>Avoid offensive language and explicit content</li>
+        </ul>
+      </article>
+    </dialog>
     <footer>
       <p>
         Made with ❤️ by <a href="https://vhs.codeberg.page/">VHS</a> using
