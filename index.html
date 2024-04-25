@@ -50,15 +50,9 @@
           );
 
           if (!response.ok) {
-            const submit = document.forms[0]?.elements?.submit;
-            const dialog = document.querySelector("dialog");
+            const dialog = document.getElementById("error-dialog-bedrock");
             dialog?.showModal();
-            cancelAnimationFrame(raf);
-            setAnimationProgressBar(0);
-            if (submit) {
-              submit.removeAttribute("aria-busy");
-              submit.removeAttribute("aria-label");
-            }
+            resetFormBusyState(0);
             throw new Error("Network response was not ok");
           }
 
@@ -70,13 +64,11 @@
           await new Promise((resolve, reject) => {
             img.onload = () => {
               resolve();
-              cancelAnimationFrame(raf);
-              setAnimationProgressBar(100);
+              resetFormBusyState(100);
             };
             img.onerror = (err) => {
               reject(err);
-              cancelAnimationFrame(raf);
-              setAnimationProgressBar(0);
+              resetFormBusyState(0);
             };
           });
 
@@ -142,6 +134,20 @@
       };
 
       /**
+       * Reset busy state
+       * @returns {() => void}
+       */
+      const resetFormBusyState = (progress = 0) => {
+        const submit = document.forms[0]?.elements?.submit;
+        if (submit) {
+          submit.removeAttribute("aria-busy");
+          submit.removeAttribute("aria-label");
+        }
+        cancelAnimationFrame(raf);
+        setAnimationProgressBar(progress);
+      };
+
+      /**
        * Handle form submission
        * @param {SubmitEvent} event - The form submission event
        * @returns {Promise<void>}
@@ -184,6 +190,14 @@
               );
             }
           } catch (error) {
+            let dialog;
+            if (error?.message?.includes("Network response was not ok")) {
+              dialog = document.getElementById("error-dialog-bedrock");
+            } else {
+              dialog = document.getElementById("error-dialog-generic");
+            }
+            dialog?.showModal();
+            resetFormBusyState(0);
             console.error("Error rendering image:", error);
           }
         }
@@ -204,13 +218,13 @@
           form.addEventListener("submit", handleSubmit);
         }
 
-        const dialog = document.querySelector("dialog");
-        if (dialog) {
-          const closeInput = dialog.querySelector('[aria-label="Close"]');
-          closeInput &&
-            closeInput.addEventListener("click", () => {
+        const dialogs = document.querySelectorAll("dialog");
+        if (dialogs.length) {
+          dialogs.forEach((dialog) => {
+            dialog.addEventListener("click", () => {
               dialog.close();
             });
+          });
         }
       });
     </script>
@@ -261,7 +275,7 @@ a photograph of an astronaut riding a horse, 8k</textarea
       </form>
       <article id="results"></article>
     </main>
-    <dialog>
+    <dialog id="error-dialog-bedrock">
       <article>
         <header>
           <button aria-label="Close" rel="prev"></button>
@@ -276,6 +290,22 @@ a photograph of an astronaut riding a horse, 8k</textarea
           <li>Try again with a different prompt</li>
           <li>Keep your prompt less than 75 tokens (whitespace delimited)</li>
           <li>Avoid offensive language and explicit content</li>
+        </ul>
+      </article>
+    </dialog>
+    <dialog id="error-dialog-generic">
+      <article>
+        <header>
+          <button aria-label="Close" rel="prev"></button>
+          <p>
+            <strong>🦙 Uh oh! Something went wrong.</strong>
+          </p>
+        </header>
+        <p>There was an error during your request. Please try again later.</p>
+        <ul>
+          <li>Make sure your endpoint is valid</li>
+          <li>Ensure CORS is enabled</li>
+          <li>Ensure your endpoint is reachable</li>
         </ul>
       </article>
     </dialog>
