@@ -37,8 +37,20 @@
         }
 
         try {
+          const cfgScale =
+            document.querySelector('input[name="cfg_scale"]')?.value ?? 8.0;
+          const steps =
+            document.querySelector('input[name="steps"]')?.value ?? 20;
+          const seed = document.querySelector('input[name="seed"]')?.value ?? 0;
+          const dimensions = document
+            .querySelector('select[name="dimensions"]')
+            ?.value.split("x")
+            .map((x) => parseInt(x, 10));
+          const width = dimensions[0] ?? 1024;
+          const height = dimensions[1] ?? 1024;
+
           const response = await fetch(
-            `${endpoint}?cfg_scale=8.0&steps=20&seed=0`,
+            `${endpoint}?cfg_scale=${cfgScale}&steps=${steps}&seed=${seed}&width=${width}&height=${height}`,
             {
               method: "POST",
               headers: {
@@ -265,13 +277,66 @@ a photograph of an astronaut riding a horse, 8k</textarea
         <button type="submit" aria-busy="false" name="submit">
           Generate image
         </button>
-        <fieldset>
-          <legend>Settings:</legend>
-          <label>
-            <input type="checkbox" name="captions" />
-            Display prompt as image caption (experimental)
-          </label>
-        </fieldset>
+        <details>
+          <summary>Settings</summary>
+          <fieldset>
+            <legend>Experimental:</legend>
+            <label>
+              <input type="checkbox" name="captions" />
+              Display prompt as image caption
+            </label>
+          </fieldset>
+          <fieldset>
+            <legend>Model:</legend>
+            <label>
+              CFG Scale
+              <input
+                name="cfg_scale"
+                type="number"
+                value="8.0"
+                min="0"
+                max="35"
+                step="0.1"
+              />
+              <small>(0-35)</small>
+            </label>
+            <label>
+              Steps
+              <input name="steps" type="number" value="20" min="10" max="50" />
+              <small>(10-50)</small>
+            </label>
+            <label>
+              Seed
+              <input
+                name="seed"
+                type="number"
+                value="0"
+                min="0"
+                max="4294967295"
+              />
+              <small>(0-4294967295)</small>
+            </label>
+            <label>
+              Image dimensions
+              <select
+                name="dimensions"
+                aria-label="Choose image dimensions"
+                required
+              >
+                <option selected>1024x1024</option>
+                <option>1152x896</option>
+                <option>1216x832</option>
+                <option>1344x768</option>
+                <option>1536x640</option>
+                <option>640x1536</option>
+                <option>768x1344</option>
+                <option>832x1216</option>
+                <option disabled>896x1152</option>
+              </select>
+              <small>(1024x1024 is the default when not specified)</small>
+            </label>
+          </fieldset>
+        </details>
       </form>
       <article id="results"></article>
     </main>
