@@ -328,9 +328,11 @@
       <noscript>
         <p>This page requires JavaScript.</p>
       </noscript>
-      <p>Enter your prompt here and click "Generate image".</p>
       <form>
-        <textarea name="prompt">
+        <label for="prompt"
+          >Enter your prompt here and click "Generate image".</label
+        >
+        <textarea name="prompt" id="prompt">
 a photograph of an astronaut riding a horse, 8k</textarea
         >
         <progress id="progress" value="0" max="100"></progress>
