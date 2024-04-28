@@ -229,15 +229,6 @@
         } else {
           form.addEventListener("submit", handleSubmit);
         }
-
-        const dialogs = document.querySelectorAll("dialog");
-        if (dialogs.length) {
-          dialogs.forEach((dialog) => {
-            dialog.addEventListener("click", () => {
-              dialog.hide();
-            });
-          });
-        }
       });
     </script>
     <style>
@@ -287,6 +278,8 @@
       customElements.define(
         "pico-dialog",
         class extends HTMLElement {
+          static observedAttributes = ["open"];
+
           constructor() {
             super()
               .attachShadow({ mode: "open" })
@@ -306,6 +299,15 @@
               dialog.close();
             });
             button.focus();
+          }
+
+          attributeChangedCallback(name, oldValue, newValue) {
+            if (oldValue === newValue) {
+              return;
+            }
+            if (name === "open") {
+              this.shadowRoot.querySelector("dialog").open = newValue !== null;
+            }
           }
 
           show() {
