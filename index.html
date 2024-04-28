@@ -63,7 +63,7 @@
 
           if (!response.ok) {
             const dialog = document.getElementById("error-dialog-bedrock");
-            dialog?.showModal();
+            dialog?.show();
             resetFormBusyState(0);
             throw new Error("Network response was not ok");
           }
@@ -208,7 +208,7 @@
             } else {
               dialog = document.getElementById("error-dialog-generic");
             }
-            dialog?.showModal();
+            dialog?.show();
             resetFormBusyState(0);
             console.error("Error rendering image:", error);
           }
@@ -234,7 +234,7 @@
         if (dialogs.length) {
           dialogs.forEach((dialog) => {
             dialog.addEventListener("click", () => {
-              dialog.close();
+              dialog.hide();
             });
           });
         }
@@ -258,6 +258,66 @@
         animation: enterFromTop 0.4s cubic-bezier(0.36, 0.55, 0.19, 1.75);
       }
     </style>
+    <template id="PICO-DIALOG">
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+      />
+      <dialog>
+        <article>
+          <header>
+            <button aria-label="Close" rel="prev"></button>
+            <p>
+              <strong>
+                <slot name="header">🦙 Uh oh! Something went wrong.</slot>
+              </strong>
+            </p>
+          </header>
+          <section>
+            <slot name="content">
+              <p>
+                There was an error during your request. Please try again later.
+              </p>
+            </slot>
+          </section>
+        </article>
+      </dialog>
+    </template>
+    <script>
+      customElements.define(
+        "pico-dialog",
+        class extends HTMLElement {
+          constructor() {
+            super()
+              .attachShadow({ mode: "open" })
+              .append(
+                document.getElementById(this.nodeName).content.cloneNode(true)
+              );
+          }
+
+          connectedCallback() {
+            const dialog = this.shadowRoot.querySelector("dialog");
+            const button = this.shadowRoot.querySelector("button");
+
+            dialog.addEventListener("click", () => {
+              dialog.close();
+            });
+            button.addEventListener("click", () => {
+              dialog.close();
+            });
+            button.focus();
+          }
+
+          show() {
+            this.shadowRoot.querySelector("dialog").showModal();
+          }
+
+          hide() {
+            this.shadowRoot.querySelector("dialog").close();
+          }
+        }
+      );
+    </script>
   </head>
 
   <body>
@@ -340,44 +400,31 @@ a photograph of an astronaut riding a horse, 8k</textarea
       </form>
       <article id="results"></article>
     </main>
-    <dialog id="error-dialog-bedrock">
-      <article>
-        <header>
-          <button aria-label="Close" rel="prev"></button>
-          <p>
-            <strong>🦙 Uh oh! Something went wrong.</strong>
-          </p>
-        </header>
-        <p>
-          Bedrock has failed to generate the image. Please try again later or:
-        </p>
+    <pico-dialog id="error-dialog-bedrock">
+      <section slot="content">
+        <p>Bedrock has failed to generate the image. Please try again later.</p>
         <ul>
           <li>Try again with a different prompt</li>
           <li>Keep your prompt less than 75 tokens (whitespace delimited)</li>
           <li>Avoid offensive language and explicit content</li>
         </ul>
-      </article>
-    </dialog>
-    <dialog id="error-dialog-generic">
-      <article>
-        <header>
-          <button aria-label="Close" rel="prev"></button>
-          <p>
-            <strong>🦙 Uh oh! Something went wrong.</strong>
-          </p>
-        </header>
+      </section>
+    </pico-dialog>
+    <pico-dialog id="error-dialog-generic">
+      <section slot="content">
         <p>There was an error during your request. Please try again later.</p>
         <ul>
           <li>Make sure your endpoint is valid</li>
           <li>Ensure CORS is enabled</li>
           <li>Ensure your endpoint is reachable</li>
         </ul>
-      </article>
-    </dialog>
+      </section>
+    </pico-dialog>
     <footer>
       <p>
         Made with ❤️ by <a href="https://vhs.codeberg.page/">VHS</a> using
-        <a href="https://picocss.com/">Pico CSS</a>.
+        <a href="https://picocss.com/">Pico CSS</a> and
+        <a href="https://www.webcomponents.org/">Web Components</a>.
       </p>
       <p>
         Get the source code on
