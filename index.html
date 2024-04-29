@@ -227,6 +227,8 @@
         const form = document.querySelector("form");
         const hiddenPrompt = form.elements.namedItem("prompt");
         const submitButton = form.elements.namedItem("submit");
+
+        // If the endpoint is not set, disable the form and show a message
         if (!endpoint || endpoint === "INPUT_ENDPOINT_HERE") {
           submitButton.disabled = true;
           picoPrompt.setAttribute(
@@ -238,12 +240,8 @@
         } else {
           form.addEventListener("submit", handleSubmit);
 
-          const picoPrompt = document.querySelector("pico-prompt");
-
           // Set the value of the pico-prompt to the value of the hidden prompt
-          if (hiddenPrompt) {
-            picoPrompt.setAttribute("value", hiddenPrompt.value);
-          }
+          hiddenPrompt && picoPrompt.setAttribute("value", hiddenPrompt.value);
 
           // Observe pico-prompt for value changes to update the form
           const observer = new MutationObserver((mutationRecords) => {
@@ -262,6 +260,7 @@
         }
       });
     </script>
+
     <style>
       canvas:not(:last-child) {
         margin-bottom: 1rem;
@@ -280,6 +279,7 @@
         animation: enterFromTop 0.4s cubic-bezier(0.36, 0.55, 0.19, 1.75);
       }
     </style>
+
     <template id="PICO-PROMPT">
       <link
         rel="stylesheet"
