@@ -238,8 +238,14 @@
         } else {
           form.addEventListener("submit", handleSubmit);
 
-          // Observe pico-prompt for value changes to update the form
           const picoPrompt = document.querySelector("pico-prompt");
+
+          // Set the value of the pico-prompt to the value of the hidden prompt
+          if (hiddenPrompt) {
+            picoPrompt.setAttribute("value", hiddenPrompt.value);
+          }
+
+          // Observe pico-prompt for value changes to update the form
           const observer = new MutationObserver((mutationRecords) => {
             mutationRecords.forEach((record) => {
               if (
@@ -253,9 +259,6 @@
             });
           });
           observer.observe(picoPrompt, { attributes: true });
-          if (hiddenPrompt) {
-            picoPrompt.setAttribute("value", hiddenPrompt.value);
-          }
         }
       });
     </script>
@@ -299,6 +302,28 @@
               );
           }
 
+          updateWordCount() {
+            const textarea = this.shadowRoot.querySelector("textarea");
+            const countWords = (str) => {
+              if (typeof str !== "string" || !str.trim()) {
+                return 0;
+              }
+              return str.trim().split(/\s+/).length;
+            };
+            const remaining = 75 - countWords(textarea.value);
+            this.shadowRoot.querySelector(
+              "small"
+            ).textContent = `${remaining} of 75 tokens remaining`;
+            if (remaining < 0) {
+              textarea.setAttribute("aria-invalid", "true");
+            } else if (remaining !== 75) {
+              textarea.setAttribute("aria-invalid", "false");
+            } else {
+              textarea.removeAttribute("aria-invalid");
+            }
+            this.setAttribute("value", textarea.value);
+          }
+
           connectedCallback() {
             const label = this.shadowRoot.querySelector("label");
             const textarea = this.shadowRoot.querySelector("textarea");
@@ -310,26 +335,6 @@
               textarea.focus();
             });
 
-            const countWords = (str) => {
-              if (typeof str !== "string" || !str.trim()) {
-                return 0;
-              }
-              return str.trim().split(/\s+/).length;
-            };
-            const updateCount = () => {
-              const remaining = 75 - countWords(textarea.value);
-              this.shadowRoot.querySelector(
-                "small"
-              ).textContent = `${remaining} of 75 tokens remaining`;
-              if (remaining < 0) {
-                textarea.setAttribute("aria-invalid", "true");
-              } else if (remaining !== 75) {
-                textarea.setAttribute("aria-invalid", "false");
-              } else {
-                textarea.removeAttribute("aria-invalid");
-              }
-              this.setAttribute("value", textarea.value);
-            };
             const debounce = (callback, waitTime, leading = false) => {
               let timer;
               return (...args) => {
@@ -342,23 +347,25 @@
                 }, waitTime);
               };
             };
-            const debouncedWithLeading = debounce(updateCount, 100, true);
+            const cb = this.updateWordCount.bind(this); // bind this to the callback
+            const debouncedWithLeading = debounce(cb, 100, true);
             textarea.addEventListener("input", debouncedWithLeading);
-            updateCount();
           }
 
           attributeChangedCallback(name, oldValue, newValue) {
             if (oldValue === newValue) {
               return;
             }
+            const textarea = this.shadowRoot.querySelector("textarea");
             if (name === "placeholder") {
-              this.shadowRoot.querySelector("textarea").placeholder = newValue;
+              textarea.placeholder = newValue;
             }
             if (name === "value") {
-              this.shadowRoot.querySelector("textarea").value = newValue;
+              textarea.value = newValue;
+              this.updateWordCount();
             }
             if (name === "disabled") {
-              this.shadowRoot.querySelector("textarea").disabled = newValue;
+              textarea.disabled = newValue;
             }
           }
 
