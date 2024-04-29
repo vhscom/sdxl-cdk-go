@@ -150,10 +150,10 @@
        * @returns {() => void}
        */
       const resetFormBusyState = (progress = 0) => {
-        const submit = document.forms[0]?.elements?.submit;
-        if (submit) {
-          submit.removeAttribute("aria-busy");
-          submit.removeAttribute("aria-label");
+        const submitButton = document.forms[0]?.elements?.submit;
+        if (submitButton) {
+          submitButton.removeAttribute("aria-busy");
+          submitButton.removeAttribute("aria-label");
         }
         cancelAnimationFrame(raf);
         setAnimationProgressBar(progress);
@@ -166,11 +166,11 @@
        */
       const handleSubmit = async (event) => {
         event.preventDefault();
-        const textarea = event.target.elements[0];
-        const button = event.target.elements[1];
+        const hiddenPrompt = event.target.elements[0];
+        const submitButton = event.target.elements[1];
         if (
-          !(textarea instanceof HTMLTextAreaElement) ||
-          !(button instanceof HTMLButtonElement)
+          !(hiddenPrompt instanceof HTMLInputElement) ||
+          !(submitButton instanceof HTMLButtonElement)
         ) {
           return;
         }
@@ -179,21 +179,21 @@
           return;
         }
 
-        const inputText = textarea.value;
+        const inputText = hiddenPrompt.value;
         if (inputText) {
           const areCaptionsEnabled =
             document.querySelector('input[name="captions"]')?.checked ?? false;
 
-          button.setAttribute("aria-busy", "true");
-          button.setAttribute("aria-label", "Please wait...");
+          submitButton.setAttribute("aria-busy", "true");
+          submitButton.setAttribute("aria-label", "Please wait...");
           try {
             animateProgressBar()();
             const canvas = await fetchAndRenderImage(
               inputText,
               areCaptionsEnabled
             );
-            button.removeAttribute("aria-busy");
-            button.removeAttribute("aria-label");
+            submitButton.removeAttribute("aria-busy");
+            submitButton.removeAttribute("aria-label");
             if (canvas) {
               canvas.style.width = "100%";
               resultsContainer.insertBefore(
@@ -212,6 +212,8 @@
             resetFormBusyState(0);
             console.error("Error rendering image:", error);
           }
+        } else {
+          document.querySelector("pico-prompt").focus();
         }
       };
 
@@ -221,13 +223,39 @@
        * @returns {void}
        */
       document.addEventListener("DOMContentLoaded", () => {
+        const picoPrompt = document.querySelector("pico-prompt");
         const form = document.querySelector("form");
+        const hiddenPrompt = form.elements.namedItem("prompt");
+        const submitButton = form.elements.namedItem("submit");
         if (!endpoint || endpoint === "INPUT_ENDPOINT_HERE") {
-          form.elements.namedItem("submit").disabled = true;
-          form.elements.namedItem("prompt").value =
-            "please set your sdxl endpoint in the page source before using the form";
+          submitButton.disabled = true;
+          picoPrompt.setAttribute(
+            "value",
+            "set your sdxl endpoint and hard refresh the page"
+          );
+          picoPrompt.setAttribute("disabled", "true");
+          picoPrompt.setAttribute("aria-invalid", "true");
         } else {
           form.addEventListener("submit", handleSubmit);
+
+          // Observe pico-prompt for value changes to update the form
+          const picoPrompt = document.querySelector("pico-prompt");
+          const observer = new MutationObserver((mutationRecords) => {
+            mutationRecords.forEach((record) => {
+              if (
+                record.type === "attributes" &&
+                record.attributeName === "value"
+              ) {
+                hiddenPrompt.value = record.target.getAttribute(
+                  record.attributeName
+                );
+              }
+            });
+          });
+          observer.observe(picoPrompt, { attributes: true });
+          if (hiddenPrompt) {
+            picoPrompt.setAttribute("value", hiddenPrompt.value);
+          }
         }
       });
     </script>
@@ -249,6 +277,98 @@
         animation: enterFromTop 0.4s cubic-bezier(0.36, 0.55, 0.19, 1.75);
       }
     </style>
+    <template id="PICO-PROMPT">
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.classless.min.css"
+      />
+      <label for="prompt"><slot name="label">Prompt:</slot></label>
+      <textarea name="prompt" id="prompt"></textarea>
+      <small>75 of 75 tokens remaining</small>
+    </template>
+    <script>
+      customElements.define(
+        "pico-prompt",
+        class extends HTMLElement {
+          static observedAttributes = ["placeholder", "value", "disabled"];
+          constructor() {
+            super()
+              .attachShadow({ mode: "open" })
+              .append(
+                document.getElementById(this.nodeName).content.cloneNode(true)
+              );
+          }
+
+          connectedCallback() {
+            const label = this.shadowRoot.querySelector("label");
+            const textarea = this.shadowRoot.querySelector("textarea");
+            if (!textarea) {
+              return;
+            }
+
+            label.addEventListener("click", () => {
+              textarea.focus();
+            });
+
+            const countWords = (str) => {
+              if (typeof str !== "string" || !str.trim()) {
+                return 0;
+              }
+              return str.trim().split(/\s+/).length;
+            };
+            const updateCount = () => {
+              const remaining = 75 - countWords(textarea.value);
+              this.shadowRoot.querySelector(
+                "small"
+              ).textContent = `${remaining} of 75 tokens remaining`;
+              if (remaining < 0) {
+                textarea.setAttribute("aria-invalid", "true");
+              } else if (remaining !== 75) {
+                textarea.setAttribute("aria-invalid", "false");
+              } else {
+                textarea.removeAttribute("aria-invalid");
+              }
+              this.setAttribute("value", textarea.value);
+            };
+            const debounce = (callback, waitTime, leading = false) => {
+              let timer;
+              return (...args) => {
+                clearTimeout(timer);
+                if (leading && !timer) {
+                  callback(...args);
+                }
+                timer = setTimeout(() => {
+                  callback(...args);
+                }, waitTime);
+              };
+            };
+            const debouncedWithLeading = debounce(updateCount, 100, true);
+            textarea.addEventListener("input", debouncedWithLeading);
+            updateCount();
+          }
+
+          attributeChangedCallback(name, oldValue, newValue) {
+            if (oldValue === newValue) {
+              return;
+            }
+            if (name === "placeholder") {
+              this.shadowRoot.querySelector("textarea").placeholder = newValue;
+            }
+            if (name === "value") {
+              this.shadowRoot.querySelector("textarea").value = newValue;
+            }
+            if (name === "disabled") {
+              this.shadowRoot.querySelector("textarea").disabled = newValue;
+            }
+          }
+
+          focus() {
+            this.shadowRoot.querySelector("textarea").focus();
+          }
+        }
+      );
+    </script>
+
     <template id="PICO-DIALOG">
       <link
         rel="stylesheet"
@@ -331,12 +451,14 @@
         <p>This page requires JavaScript.</p>
       </noscript>
       <form>
-        <label for="prompt"
-          >Enter your prompt here and click "Generate image".</label
+        <pico-prompt
+          placeholder="a photograph of an astronaut riding a horse, 8k"
         >
-        <textarea name="prompt" id="prompt">
-a photograph of an astronaut riding a horse, 8k</textarea
-        >
+          <label slot="label"
+            >Enter your prompt here and click "Generate image":</label
+          >
+        </pico-prompt>
+        <input type="hidden" name="prompt" />
         <progress id="progress" value="0" max="100"></progress>
         <button type="submit" aria-busy="false" name="submit">
           Generate image
